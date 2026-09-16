@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.3](https://github.com/schubergphilis-ep/terraform-aws-mcaf-ses-forwarder/compare/v1.1.2...v1.1.3) (2026-09-16)
+
+
+### 🐛 Fixes
+
+* duplicate CHANGELOG is causing checkout issues ([#4](https://github.com/schubergphilis-ep/terraform-aws-mcaf-ses-forwarder/issues/4)) ([da7b604](https://github.com/schubergphilis-ep/terraform-aws-mcaf-ses-forwarder/commit/da7b60488aa8ec9e937abb86b1cf5cbb36e889c6))
+
 ## [1.1.2](https://github.com/schubergphilis-ep/terraform-aws-mcaf-ses-forwarder/compare/v1.1.1...v1.1.2) (2026-07-07)
 
 
@@ -79,4 +86,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.1](https://github.com/schubergphilis-ep/terraform-aws-mcaf-ses-forwarder/compare/v0.1.0...v0.1.1) (2022-03-22)
 
 ## 0.1.0 (2021-12-03)
-
