@@ -64,28 +64,49 @@ module "ses-forwarder" {
 }
 ```
 
+## S3 Access Logging
+
+S3 server access logging is enabled on the bucket where SES stores the incoming emails. The logs are written to a dedicated access logs bucket:
+
+* The access logs bucket is named `<bucket_name>-access-logs`. As S3 bucket names are limited to 63 characters, a `var.bucket_name` longer than 51 characters is truncated to its first 51 characters (dropping any trailing `-` or `.`) in the access logs bucket name. As bucket names are globally unique, two deployments whose `var.bucket_name` share the same first 51 characters will clash on the access logs bucket name.
+* Logs are written under the `logs/` prefix, partitioned by the time of the request (`logs/<account-id>/<region>/<bucket>/YYYY/MM/DD/...`).
+* The access logs bucket is encrypted with S3 managed keys (SSE-S3) instead of `var.kms_key_arn`, as [S3 server access logging](https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html) does not support SSE-KMS on destination buckets.
+* Access logs are moved to `GLACIER_IR` after 90 days and expire after 720 days. Noncurrent versions are deleted after 7 days.
+
+The retention can be changed, or access logging disabled, with `var.s3_access_logging` (defaults shown):
+
+```hcl
+s3_access_logging = {
+  enabled                  = true
+  expiration_days          = 720
+  transition_days          = 90
+  transition_storage_class = "GLACIER_IR"
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9.0 |
 | <a name="requirement_archive"></a> [archive](#requirement\_archive) | >= 2.0.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.40.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_archive"></a> [archive](#provider\_archive) | >= 2.0.0 |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.40.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_access_logs"></a> [access\_logs](#module\_access\_logs) | schubergphilis-ep/mcaf-s3/aws | ~> 4.0.0 |
 | <a name="module_lambda"></a> [lambda](#module\_lambda) | schubergphilis-ep/mcaf-lambda/aws | ~> 3.0.0 |
-| <a name="module_s3_bucket"></a> [s3\_bucket](#module\_s3\_bucket) | schubergphilis-ep/mcaf-s3/aws | ~> 2.0.0 |
+| <a name="module_s3_bucket"></a> [s3\_bucket](#module\_s3\_bucket) | schubergphilis-ep/mcaf-s3/aws | ~> 4.0.0 |
 
 ## Resources
 
@@ -115,6 +136,7 @@ module "ses-forwarder" {
 | <a name="input_kms_key_arn"></a> [kms\_key\_arn](#input\_kms\_key\_arn) | KMS key ARN used for encryption | `string` | `null` | no |
 | <a name="input_lambda_name"></a> [lambda\_name](#input\_lambda\_name) | The name of the Lambda function | `string` | `"EmailForwarder"` | no |
 | <a name="input_region"></a> [region](#input\_region) | The AWS region where the resources will be created. If omitted, the default provider region is used. | `string` | `null` | no |
+| <a name="input_s3_access_logging"></a> [s3\_access\_logging](#input\_s3\_access\_logging) | S3 server access logging configuration for the SES forwarder bucket. 'expiration\_days' and 'transition\_days' set the retention of the access logs. | <pre>object({<br/>    enabled                  = optional(bool, true)<br/>    expiration_days          = optional(number, 720)<br/>    transition_days          = optional(number, 90)<br/>    transition_storage_class = optional(string, "GLACIER_IR")<br/>  })</pre> | `{}` | no |
 | <a name="input_ses_rule_name"></a> [ses\_rule\_name](#input\_ses\_rule\_name) | The name of the SES rule that invokes the Lambda function | `string` | `"EmailForwarder"` | no |
 | <a name="input_ses_rule_set_name"></a> [ses\_rule\_set\_name](#input\_ses\_rule\_set\_name) | The name of the active Rule Set in SES which you have already configured | `string` | `"EmailForwarder"` | no |
 | <a name="input_subject_prefix"></a> [subject\_prefix](#input\_subject\_prefix) | String to prepend to the subject of forwarded mail | `string` | `""` | no |

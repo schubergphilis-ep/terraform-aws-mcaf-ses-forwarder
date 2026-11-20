@@ -62,6 +62,23 @@ variable "region" {
   description = "The AWS region where the resources will be created. If omitted, the default provider region is used."
 }
 
+variable "s3_access_logging" {
+  type = object({
+    enabled                  = optional(bool, true)
+    expiration_days          = optional(number, 720)
+    transition_days          = optional(number, 90)
+    transition_storage_class = optional(string, "GLACIER_IR")
+  })
+  default     = {}
+  nullable    = false
+  description = "S3 server access logging configuration for the SES forwarder bucket. 'expiration_days' and 'transition_days' set the retention of the access logs."
+
+  validation {
+    condition     = var.s3_access_logging.expiration_days > var.s3_access_logging.transition_days
+    error_message = "'s3_access_logging.expiration_days' must be greater than 's3_access_logging.transition_days'."
+  }
+}
+
 variable "ses_rule_name" {
   type        = string
   default     = "EmailForwarder"
